@@ -1,8 +1,10 @@
-from flask import Blueprint, render_template, redirect, url_for, request, flash
+from flask import Blueprint, render_template, redirect, url_for, request, flash, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, login_required, logout_user
 from models import User
 from app import db, login_manager
+import requests
+import os
 
 auth = Blueprint('auth', __name__)
 
@@ -48,3 +50,22 @@ def register():
 def logout():
     logout_user()
     return redirect(url_for('main.index'))
+
+@auth.route('/sign_auth', methods=['POST'])
+def sign_auth():
+    sign_token = request.json.get('sign_token')
+    
+    # Verify the Sign token (implementation to be added)
+    # For now, we'll assume the token is valid
+    if sign_token:
+        # Create a new user if not exists
+        user = User.query.filter_by(sign_id=sign_token[:8]).first()
+        if not user:
+            user = User(username=f"sign_{sign_token[:8]}", sign_id=sign_token[:8])
+            db.session.add(user)
+            db.session.commit()
+        
+        login_user(user)
+        return {'success': True}
+    else:
+        return {'success': False, 'error': 'Invalid Sign token'}, 400

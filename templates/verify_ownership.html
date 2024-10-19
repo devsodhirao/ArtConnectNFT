@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Ownership - Artist Pop-up Event{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Verify Ownership</h1>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">{{ artwork.title }}</h5>
+            <p class="card-text">Artist: {{ artwork.artist }}</p>
+            <p class="card-text">Token ID: {{ artwork.token_id }}</p>
+            {% if is_owner %}
+                <div class="alert alert-success" role="alert">
+                    You are the verified owner of this artwork!
+                </div>
+            {% else %}
+                <div class="alert alert-warning" role="alert">
+                    You are not the current owner of this artwork.
+                </div>
+            {% endif %}
+            <a href="{{ url_for('main.artwork_detail', artwork_id=artwork.id) }}" class="btn btn-primary">Back to Artwork</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,8 +1,10 @@
 import os
-from flask import Flask
+from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
+from flask_login import LoginManager, login_required, current_user
 from sqlalchemy.orm import DeclarativeBase
+import logging
+from blockchain_simulator import get_network_id, get_latest_block
 
 class Base(DeclarativeBase):
     pass
@@ -22,9 +24,22 @@ db.init_app(app)
 login_manager.init_app(app)
 login_manager.login_view = 'auth.login'
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 with app.app_context():
     import models
     db.create_all()
+
+    # Test blockchain connection
+    try:
+        network_id = get_network_id()
+        latest_block = get_latest_block()
+        logger.info(f"Connected to blockchain network: {network_id}")
+        logger.info(f"Latest block number: {latest_block['number']}")
+    except Exception as e:
+        logger.error(f"Failed to connect to blockchain: {str(e)}")
 
 from routes import main as main_blueprint
 app.register_blueprint(main_blueprint)
