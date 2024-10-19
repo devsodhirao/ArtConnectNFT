@@ -4,12 +4,14 @@ from app import db
 from models import User, Artwork, Interaction
 from blockchain_simulator import mint_token, transfer_token
 from utils import get_engagement_metrics
+import logging
 
 main = Blueprint('main', __name__)
 
 @main.route('/')
 def index():
     artworks = Artwork.query.all()
+    logging.debug(f"Number of artworks: {len(artworks)}")
     return render_template('index.html', artworks=artworks)
 
 @main.route('/dashboard')
