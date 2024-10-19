@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}{{ artwork.title }} - Artist Pop-up Event{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h1 class="mb-4">{{ artwork.title }}</h1>
+        <h5 class="text-muted">by {{ artwork.artist }}</h5>
+        <p>{{ artwork.description }}</p>
+        <p><strong>Token ID:</strong> {{ artwork.token_id }}</p>
+    </div>
+    <div class="col-md-4">
+        <h2>Interact with Artwork</h2>
+        <form action="{{ url_for('main.interact') }}" method="POST">
+            <input type="hidden" name="artwork_id" value="{{ artwork.id }}">
+            <div class="mb-3">
+                <label for="interaction_type" class="form-label">Interaction Type</label>
+                <select class="form-select" id="interaction_type" name="interaction_type" required>
+                    <option value="view">View</option>
+                    <option value="like">Like</option>
+                    <option value="comment">Comment</option>
+                    <option value="share">Share</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Record Interaction</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/artwork_interaction.js') }}"></script>
+{% endblock %}
