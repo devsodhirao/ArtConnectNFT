@@ -6,17 +6,25 @@
 <h1 class="mb-4">Welcome to the Artist Pop-up Event</h1>
 
 <div class="row">
-    {% for artwork in artworks %}
-    <div class="col-md-4 mb-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">{{ artwork.title }}</h5>
-                <h6 class="card-subtitle mb-2 text-muted">by {{ artwork.artist }}</h6>
-                <p class="card-text">{{ artwork.description[:100] }}...</p>
-                <a href="{{ url_for('main.artwork_detail', artwork_id=artwork.id) }}" class="btn btn-primary">View Details</a>
+    {% if artworks %}
+        {% for artwork in artworks %}
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ artwork.title }}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">by {{ artwork.artist }}</h6>
+                    <p class="card-text">{{ artwork.description[:100] }}...</p>
+                    <a href="{{ url_for('main.artwork_detail', artwork_id=artwork.id) }}" class="btn btn-primary">View Details</a>
+                </div>
             </div>
         </div>
-    </div>
-    {% endfor %}
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                No artworks available yet. Check back soon!
+            </div>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}
