@@ -12,4 +12,7 @@ dependencies = [
     "web3>=7.4.0",
     "eth-account>=0.13.4",
     "siwe>=4.4.0",
+    "alchemy-sdk",
+    "skale-py>=0.57.0",
+    "python-dotenv",
 ]

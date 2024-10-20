@@ -1,0 +1,37 @@
+et’s break down what each type will need in terms of blockchain interactions and app features:
+
+1. Artists
+Role: Mint NFTs, manage their own artwork, and interact with attendees.
+Blockchain Interaction:
+Minting NFTs: Artists use their own wallet to mint NFTs representing their artwork.
+Access Control: Artists might have special permissions for editing artwork details or interacting with event-specific smart contracts.
+Access Features:
+Uploading artwork details, minting tokens, viewing artwork ownership history, interacting with attendees.
+2. Attendees
+Role: Engage with the event, interact with artworks, collect NFTs, and access exclusive content.
+Blockchain Interaction:
+Wallet Verification: Use their own wallet to log in and sign messages to authenticate.
+Minting or Buying NFTs: Can purchase NFTs created by artists.
+Exclusive Content: Using NFTs as access keys to unlock exclusive content.
+Access Features:
+Viewing artwork, minting their NFTs, accessing exclusive content if they hold the corresponding NFT.
+3. Admins
+Role: Manage the event, oversee activities, and make sure things run smoothly.
+Blockchain Interaction:
+No Direct Private Key Use: Ideally, admins wouldn’t need direct blockchain transactions (e.g., minting tokens), but would instead oversee the system.
+They might, however, need elevated permissions to view blockchain data (like total minted NFTs, transaction history, etc.) using read-only access.
+Access Features:
+Managing artist accounts, event settings, and overseeing transactions. Admins can access dashboards with real-time analytics provided by services like The Graph.
+How to Structure the Application:
+Authentication:
+Artists and Attendees authenticate through wallets like MetaMask.
+Admins could have a more traditional username/password login but also connect via a wallet if they’re performing blockchain-specific roles.
+Blockchain Interaction Points:
+Attendees and Artists use wallets for all blockchain actions (minting, transfers).
+Admins oversee operations without needing private keys, unless deploying new contracts.
+Blockchain and Wallet Tools:
+Sign Protocol (for SIWE): This will work well for all three types of users to authenticate.
+Wallet-Based Features:
+Artists: Enable minting contracts through a UI that interacts with SKALE via MetaMask.
+Attendees: Enable access to content and purchases via NFTs.
+Admins: Oversee content, but without needing direct write access to blockchain.

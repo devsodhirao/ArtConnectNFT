@@ -1,6 +1,5 @@
 import os
 from web3 import Web3
-from eth_account.messages import encode_defunct
 import json
 from pathlib import Path
 import logging
@@ -9,100 +8,80 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Connect to local Hardhat node
-w3 = Web3(Web3.HTTPProvider('http://127.0.0.1:8545'))
+class BlockchainSimulator:
+    def __init__(self):
+        self.w3 = None
+        self.contract = None
+        self.blockchain_available = False
+        self.connect_to_blockchain()
 
-# Load ArtistPopupNFT contract ABI and address
-contract_path = Path("artifacts/contracts/ArtistPopupNFT.sol/ArtistPopupNFT.json")
-try:
-    with open(contract_path, "r") as file:
-        contract_json = json.load(file)
-        contract_abi = contract_json["abi"]
-except FileNotFoundError:
-    logger.error(f"Contract file not found: {contract_path}")
-    raise
+    def connect_to_blockchain(self):
+        try:
+            skale_endpoint = os.environ.get('SKALE_ENDPOINT')
+            if not skale_endpoint:
+                raise ValueError("SKALE_ENDPOINT environment variable is not set")
 
-# Use the deployed contract address
-contract_address = '0x5FbDB2315678afecb367f032d93F642f64180aa3'
+            self.w3 = Web3(Web3.HTTPProvider(skale_endpoint))
+            if not self.w3.is_connected():
+                raise ConnectionError("Failed to connect to the SKALE node")
 
-# Get deployed contract instance
-try:
-    contract = w3.eth.contract(address=contract_address, abi=contract_abi)
-except Exception as e:
-    logger.error(f"Failed to get contract instance: {str(e)}")
-    raise
+            contract_path = Path("artifacts/contracts/ArtistPopupNFT.sol/ArtistPopupNFT.json")
+            if not contract_path.exists():
+                raise FileNotFoundError(f"Contract file not found: {contract_path}")
 
-def mint_token(user_id, artwork_title, artist, description):
-    try:
-        tx_hash = contract.functions.mintNFT(
-            w3.eth.accounts[user_id],
-            f"ipfs://{artwork_title}",
-            artwork_title,
-            artist,
-            description
-        ).transact({'from': w3.eth.accounts[0]})
-        tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
-        logger.info(f"Token minted for user {user_id}, artwork: {artwork_title}")
-        return tx_receipt['transactionHash'].hex()
-    except Exception as e:
-        logger.error(f"Error minting token: {str(e)}")
-        raise
+            with open(contract_path, "r") as file:
+                contract_json = json.load(file)
+                contract_abi = contract_json["abi"]
 
-def transfer_token(token_id, from_user_id, to_user_id):
-    try:
-        tx_hash = contract.functions.transferFrom(
-            w3.eth.accounts[from_user_id],
-            w3.eth.accounts[to_user_id],
-            token_id
-        ).transact({'from': w3.eth.accounts[from_user_id]})
-        tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
-        logger.info(f"Token {token_id} transferred from user {from_user_id} to user {to_user_id}")
-        return tx_receipt['status'] == 1
-    except Exception as e:
-        logger.error(f"Error transferring token: {str(e)}")
-        return False
+            contract_address_file = Path("contract-address.txt")
+            if not contract_address_file.exists():
+                raise FileNotFoundError("contract-address.txt not found. Please deploy the contract first.")
 
-def get_token_owner(token_id):
-    try:
-        owner = contract.functions.ownerOf(token_id).call()
-        logger.info(f"Owner of token {token_id}: {owner}")
-        return owner
-    except Exception as e:
-        logger.error(f"Error getting token owner: {str(e)}")
-        raise
+            with open(contract_address_file, "r") as file:
+                contract_address = file.read().strip()
 
-def get_artwork_details(token_id):
-    try:
-        title, artist, description = contract.functions.getArtwork(token_id).call()
-        logger.info(f"Artwork details for token {token_id}: Title: {title}, Artist: {artist}")
-        return title, artist, description
-    except Exception as e:
-        logger.error(f"Error getting artwork details: {str(e)}")
-        raise
+            self.contract = self.w3.eth.contract(address=Web3.to_checksum_address(contract_address), abi=contract_abi)
+            self.blockchain_available = True
+            
+            # Log the contract address and SKALE Explorer link
+            skale_explorer_url = "https://giant-half-dual-testnet.explorer.testnet.skalenodes.com"
+            logger.info(f"Successfully connected to the SKALE node")
+            logger.info(f"ArtistPopupNFT contract address: {contract_address}")
+            logger.info(f"View the contract on SKALE Explorer: {skale_explorer_url}/address/{contract_address}")
+        except Exception as e:
+            logger.error(f"Failed to connect to the SKALE node: {str(e)}")
+            self.blockchain_available = False
 
-def sign_message(message):
-    private_key = w3.eth.account.create().privateKey
-    signed_message = w3.eth.account.sign_message(encode_defunct(text=message), private_key=private_key)
-    return signed_message.signature.hex()
+    def get_contract_abi(self):
+        return self.contract.abi if self.blockchain_available else None
 
-def verify_signature(message, signature, address):
-    signed_address = w3.eth.account.recover_message(encode_defunct(text=message), signature=signature)
-    return signed_address.lower() == address.lower()
+    def get_contract_address(self):
+        return self.contract.address if self.blockchain_available else None
 
-# Hardhat node specific functions
-def get_network_id():
-    return w3.net.version
+    def get_network_id(self):
+        return self.w3.eth.chain_id if self.blockchain_available else None
 
-def get_latest_block():
-    return w3.eth.get_block('latest')
+    def get_latest_block(self):
+        if not self.blockchain_available:
+            return None
+        try:
+            return self.w3.eth.get_block('latest')
+        except Exception as e:
+            logger.error(f"Error getting latest block: {str(e)}")
+            return None
+
+# Initialize the BlockchainSimulator
+blockchain_simulator = BlockchainSimulator()
 
 # Example usage and connection test
 try:
-    network_id = get_network_id()
-    latest_block = get_latest_block()
-    logger.info(f"Connected to network: {network_id}")
-    logger.info(f"Latest block: {latest_block['number']}")
-    logger.info(f"ArtistPopupNFT contract address: {contract_address}")
+    network_id = blockchain_simulator.get_network_id()
+    latest_block = blockchain_simulator.get_latest_block()
+    if network_id:
+        logger.info(f"Connected to network: {network_id}")
+    if latest_block:
+        logger.info(f"Latest block: {latest_block['number']}")
+    else:
+        logger.warning("Failed to retrieve latest block")
 except Exception as e:
-    logger.error(f"Failed to connect to Hardhat node: {str(e)}")
-    raise
+    logger.error(f"Failed to connect to SKALE node: {str(e)}")

@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_required, current_user
 from sqlalchemy.orm import DeclarativeBase
 import logging
-from blockchain_simulator import get_network_id, get_latest_block
+from blockchain_simulator import blockchain_simulator
 
 class Base(DeclarativeBase):
     pass
@@ -30,16 +30,17 @@ logger = logging.getLogger(__name__)
 
 with app.app_context():
     import models
-    db.create_all()
+    db.drop_all()  # Drop all existing tables
+    db.create_all()  # Create new tables with updated schema
 
-    # Test blockchain connection
+    # Test Hardhat node connection
     try:
-        network_id = get_network_id()
-        latest_block = get_latest_block()
-        logger.info(f"Connected to blockchain network: {network_id}")
+        network_id = blockchain_simulator.get_network_id()
+        latest_block = blockchain_simulator.get_latest_block()
+        logger.info(f"Connected to Hardhat node. Network ID: {network_id}")
         logger.info(f"Latest block number: {latest_block['number']}")
     except Exception as e:
-        logger.error(f"Failed to connect to blockchain: {str(e)}")
+        logger.error(f"Failed to connect to Hardhat node: {str(e)}")
 
 from routes import main as main_blueprint
 app.register_blueprint(main_blueprint)
